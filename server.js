@@ -1,0 +1,56 @@
+require("dotenv").config();
+const express = require("express");
+const AWS = require("aws-sdk");
+const winston = require("winston");
+require("winston-daily-rotate-file");
+
+const transport = new winston.transports.DailyRotateFile({
+  filename: "logs/server-%DATE%.log",
+  datePattern: "YYYY-MM-DD",
+  zippedArchive: true,
+  maxSize: "20m",
+  maxFiles: "14d",
+});
+
+const logger = winston.createLogger({
+  level: "info",
+  format: winston.format.combine(
+    winston.format.timestamp(),
+    winston.format.json()
+  ),
+  transports: [transport, new winston.transports.Console()],
+});
+
+const app = express();
+app.use(express.json());
+
+AWS.config.update({ region: process.env.AWS_REGION });
+const sqs = new AWS.SQS();
+
+app.post("/push-to-db", async (req, res) => {
+  const { deviceId, timestamp, level } = req.body;
+
+  if (!deviceId || !timestamp || level === undefined) {
+    logger.warn("Invalid payload received", { deviceId, timestamp, level });
+    return res.status(400).json({ error: "Invalid payload" });
+  }
+
+  const messageBody = JSON.stringify({ deviceId, timestamp, level });
+
+  const params = {
+    QueueUrl: process.env.AWS_SQS_QUEUE_URL,
+    MessageBody: messageBody,
+  };
+
+  try {
+    await sqs.sendMessage(params).promise();
+    logger.info("Data received and queued", { deviceId, timestamp, level });
+    res.json({ message: "Data received and queued" });
+  } catch (error) {
+    logger.error("SQS Error:", error);
+    res.status(500).json({ error: "Failed to queue message" });
+  }
+});
+
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => logger.info(`Server running on port ${PORT}`));
