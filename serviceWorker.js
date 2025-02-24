@@ -32,8 +32,10 @@ async function createTableIfNotExists() {
     CREATE TABLE IF NOT EXISTS water_data (
       id SERIAL PRIMARY KEY,
       device_id VARCHAR(255) NOT NULL,
-      timestamp TIMESTAMP NOT NULL,
-      level FLOAT NOT NULL
+      timestamp VARCHAR(255) NOT NULL,
+      level FLOAT NOT NULL,
+      flow FLOAT NOT NULL,
+      enerygy FLOAT NOT NULL
     );
   `;
 
@@ -59,11 +61,11 @@ async function processQueue() {
     if (!data.Messages) return;
 
     for (const msg of data.Messages) {
-      const { deviceId, timestamp, level } = JSON.parse(msg.Body);
+      const { deviceCode, time, Level, Flow, Energy } = JSON.parse(msg.Body);
 
       await db.none(
-        "INSERT INTO water_data (device_id, timestamp, level) VALUES ($1, $2, $3)",
-        [deviceId, timestamp, level]
+        "INSERT INTO water_data (device_id, timestamp, level, flow, energy) VALUES ($1, $2, $3, $4, $5)",
+        [deviceCode, time, Level, Flow, Energy]
       );
 
       await sqs

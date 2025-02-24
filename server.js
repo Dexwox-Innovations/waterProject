@@ -28,14 +28,14 @@ AWS.config.update({ region: process.env.AWS_REGION });
 const sqs = new AWS.SQS();
 
 app.post("/push-to-db", async (req, res) => {
-  const { deviceId, timestamp, level } = req.body;
+  const { deviceCode, time, Level, Flow, Energy } = req.body;
 
-  if (!deviceId || !timestamp || level === undefined) {
-    logger.warn("Invalid payload received", { deviceId, timestamp, level });
+  if (!deviceCode || !time || !Level || !Flow || !Energy) {
+    logger.warn("Invalid payload received");
     return res.status(400).json({ error: "Invalid payload" });
   }
 
-  const messageBody = JSON.stringify({ deviceId, timestamp, level });
+  const messageBody = JSON.stringify({ deviceCode, time, Level, Flow, Energy });
 
   const params = {
     QueueUrl: process.env.AWS_SQS_QUEUE_URL,
@@ -44,7 +44,13 @@ app.post("/push-to-db", async (req, res) => {
 
   try {
     await sqs.sendMessage(params).promise();
-    logger.info("Data received and queued", { deviceId, timestamp, level });
+    logger.info("Data received and queued", {
+      deviceCode,
+      time,
+      Level,
+      Flow,
+      Energy,
+    });
     res.json({ message: "Data received and queued" });
   } catch (error) {
     logger.error("SQS Error:", error);
