@@ -64,7 +64,7 @@ async function processQueue() {
       const { deviceCode, time, Level, Flow, Energy } = JSON.parse(msg.Body);
 
       await db.none(
-        "INSERT INTO water_data (device_id, timestamp, level, flow, energy) VALUES ($1, $2, $3, $4, $5)",
+        "INSERT INTO water_data (device_id, timestamp, level, flow, enerygy) VALUES ($1, $2, $3, $4, $5)",
         [deviceCode, time, Level, Flow, Energy]
       );
 
