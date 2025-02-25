@@ -64,8 +64,8 @@ async function processQueue() {
       const { deviceCode, time, Level, Flow, Energy } = JSON.parse(msg.Body);
 
       if (
-        deviceCode !== null &&
-        time !== null &&
+        deviceCode &&
+        time &&
         Level !== null &&
         Flow !== null &&
         Energy !== null
@@ -74,6 +74,14 @@ async function processQueue() {
           "INSERT INTO water_data (device_id, timestamp, level, flow, enerygy) VALUES ($1, $2, $3, $4, $5)",
           [deviceCode, time, Level, Flow, Energy]
         );
+      } else {
+        logger.warn("Skipped inserting null or undefined values:", {
+          deviceCode,
+          time,
+          Level,
+          Flow,
+          Energy,
+        });
       }
 
       await sqs
