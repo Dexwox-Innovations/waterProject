@@ -68,20 +68,26 @@ async function processQueue() {
         time &&
         Level !== null &&
         Flow !== null &&
-        Energy !== null
+        Energy !== null &&
+        !isNaN(Level) &&
+        !isNaN(Flow) &&
+        !isNaN(Energy)
       ) {
         await db.none(
           "INSERT INTO water_data (device_id, timestamp, level, flow, enerygy) VALUES ($1, $2, $3, $4, $5)",
           [deviceCode, time, Level, Flow, Energy]
         );
       } else {
-        logger.warn("Skipped inserting null or undefined values:", {
-          deviceCode,
-          time,
-          Level,
-          Flow,
-          Energy,
-        });
+        logger.warn(
+          "Skipped inserting null or undefined or non-numeric values:",
+          {
+            deviceCode,
+            time,
+            Level,
+            Flow,
+            Energy,
+          }
+        );
       }
 
       await sqs
