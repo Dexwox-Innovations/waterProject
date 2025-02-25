@@ -27,7 +27,7 @@ app.use(express.json());
 AWS.config.update({ region: process.env.AWS_REGION });
 const sqs = new AWS.SQS();
 
-app.post("/push-to-db", async (req, res) => {
+app.post("/", async (req, res) => {
   const { deviceCode, time, Level, Flow, Energy } = req.body;
 
   if (!deviceCode || !time || !Level || !Flow || !Energy) {
@@ -44,13 +44,9 @@ app.post("/push-to-db", async (req, res) => {
 
   try {
     await sqs.sendMessage(params).promise();
-    logger.info("Data received and queued", {
-      deviceCode,
-      time,
-      Level,
-      Flow,
-      Energy,
-    });
+    logger.info(
+      `Data received LOG => ${deviceCode} : ${time} : ${Level} : ${Flow} : ${Energy}`
+    );
     res.json({ message: "Data received and queued" });
   } catch (error) {
     logger.error("SQS Error:", error);

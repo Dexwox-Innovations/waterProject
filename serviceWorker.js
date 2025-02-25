@@ -63,10 +63,18 @@ async function processQueue() {
     for (const msg of data.Messages) {
       const { deviceCode, time, Level, Flow, Energy } = JSON.parse(msg.Body);
 
-      await db.none(
-        "INSERT INTO water_data (device_id, timestamp, level, flow, enerygy) VALUES ($1, $2, $3, $4, $5)",
-        [deviceCode, time, Level, Flow, Energy]
-      );
+      if (
+        deviceCode !== null &&
+        time !== null &&
+        Level !== null &&
+        Flow !== null &&
+        Energy !== null
+      ) {
+        await db.none(
+          "INSERT INTO water_data (device_id, timestamp, level, flow, enerygy) VALUES ($1, $2, $3, $4, $5)",
+          [deviceCode, time, Level, Flow, Energy]
+        );
+      }
 
       await sqs
         .deleteMessage({
